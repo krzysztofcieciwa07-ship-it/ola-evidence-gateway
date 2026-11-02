@@ -1,3 +1,5 @@
+> **UWAGA — zakres repozytorium (2026-11-02):** poniższy tekst jest specyfikacją, a nie potwierdzoną implementacją działającego API. Zobacz [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). Nie ogłaszaj tego repozytorium jako usługi produkcyjnej.
+
 
 
 Evidence Layer for OLA di-OS

@@ -1,3 +1,20 @@
+# Repository status — SPEC ONLY
+
+> **Classification at inspected baseline `cd19acece5103672cba26398e310c41efaad3a1c`: SPEC ONLY / NOT IMPLEMENTED / NOT RUNTIME-VERIFIED.**
+>
+> The complete tracked tree at this commit contains only:
+> - `.devcontainer/devcontainer.json`
+> - `.vscode/launch.json`
+> - `README.md`
+>
+> There is no application source, API implementation, database schema/migration, test suite, build configuration, container definition, CI workflow, or runnable Evidence Gateway service in this repository at this baseline. The sections below are an architectural and implementation specification, not a description of existing executable capabilities.
+>
+> Do not claim that this repository currently collects, hashes, stores, signs, verifies, or exports customer evidence. Those are requirements described below. The separate OLA runtime repository contains some evidence-related implementation, but it must be evaluated at its own exact commit and must not be represented as code in this repository.
+>
+> **Next implementation gate:** define a minimal contract and threat model; implement one vertical slice (authorized input → canonicalization → content hash → durable append → independent verification → export); add tenant-isolation, tamper, provenance, and UNKNOWN-state tests; then provide reproducible local and CI execution evidence.
+
+---
+
 
 
 Evidence Layer for OLA di-OS

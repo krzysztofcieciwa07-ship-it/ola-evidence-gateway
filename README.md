@@ -1,672 +1,82 @@
+# OLA Evidence Gateway
 
+**Repository status: SPECIFICATION / NOT IMPLEMENTED HERE**
 
-Evidence Layer for OLA di-OS
+This repository currently contains a design document and editor configuration. It does not contain an executable Evidence Gateway, API implementation, persistence layer, test suite, CI workflow, or deployment definition.
 
-OLA Evidence is the evidence and provenance layer of OLA di-OS.
+The active OLA runtime and its implemented evidence mechanisms are maintained in the [canonical OLA repository](https://github.com/krzysztofcieciwa07-ship-it/OLA). Do not infer that every capability in this specification is already implemented there or in this repository. Verify each capability against the source and tests.
 
-Its purpose is to transform operational observations, files, events and verification results into structured, traceable and independently verifiable evidence.
+## Purpose
 
-The core principle is:
+This repository is the design boundary for a future evidence-ingestion and provenance adapter. Its proposed responsibility is to normalize observations from authorized sources and make their origin, content digest, collection context, and verification status inspectable.
 
-«No important decision without traceable evidence.»
+The governing separation is:
 
----
+~~~text
+SOURCE OBSERVATION
+       |
+       v
+EVIDENCE RECORD
+       |
+       v
+INDEPENDENT VERIFICATION
+       |
+       v
+DECISION / REPORT
+~~~
 
-1. Purpose
+A model interpretation is not an evidence record. A hash proves that bytes match a digest, not that the source was truthful or authorized.
 
-OLA Evidence provides a common mechanism for:
+## Current contents
 
-- collecting evidence
-- normalizing evidence
-- calculating content hashes
-- recording provenance
-- timestamping observations
-- linking evidence to decisions
-- verifying evidence integrity
-- exporting evidence for audits and reports
+- \`README.md\` — initial concept and design notes.
+- \`.devcontainer/\` — editor container configuration.
+- \`.vscode/\` — local editor launch configuration.
 
-It is designed to separate:
+There is currently no runnable command. The Dev Container image alone does not make the proposed gateway executable.
 
-FACT
-  ↓
-EVIDENCE
-  ↓
-VERIFICATION
-  ↓
-DECISION
+## Proposed scope
 
-from:
+The specification may cover:
 
-ASSUMPTION
-  ↓
-MODEL INTERPRETATION
+- authorized evidence collection;
+- deterministic content normalization where appropriate;
+- cryptographic content digests;
+- source and collector provenance;
+- timestamps and tenant scope;
+- links to runs, policies, decisions, and reports;
+- integrity verification and export of audit records.
 
-This distinction is fundamental to OLA.
+Storage, API routes, signatures, and schemas remain proposals until they are defined, implemented, and tested. Do not create a second evidence store or API that duplicates the canonical OLA runtime without an explicit architecture decision.
 
----
+## Proposed evidence distinctions
 
-2. Evidence object
+| Concept | Meaning |
+|---|---|
+| Observation | Data captured from a source. |
+| Evidence | A preserved observation plus content and provenance metadata. |
+| Integrity check | Verification that content still matches its recorded digest. |
+| Verification result | A rule-bound conclusion such as PASS, FAIL, or UNKNOWN. |
+| Decision | An action or outcome that references its evidence and verification basis. |
 
-The minimum conceptual evidence object is:
+\`UNKNOWN\` must never be silently promoted to \`PASS\`. Hashing alone does not prove authorship, authorization, truthfulness, or confidentiality.
 
-{
-  "id": "evidence-001",
-  "sourceType": "system",
-  "contentHash": "sha256:...",
-  "capturedAt": "2026-08-18T09:00:00Z",
-  "owner": "system",
-  "verification": "PASS"
-}
+## Before implementation
 
-Additional metadata may include:
+1. Confirm the ownership and source-of-truth boundary with the canonical OLA runtime.
+2. Approve a versioned evidence schema and API contract.
+3. Define tenant isolation, authorization, retention, and sensitive-data handling.
+4. Implement source adapters and persistence only after the contract is accepted.
+5. Add deterministic unit, integration, mutation, and cross-tenant tests.
+6. Add CI and deployment workflows only when there is executable code to verify.
+7. Bind release evidence to the exact source commit and deployed artifact.
 
-source
-sourceUri
-contentType
-size
-createdAt
-capturedAt
-collector
-tenantId
-missionId
-decisionId
-policyIds
-signature
-verificationStatus
+## Local development
 
-The implementation should keep the core evidence schema stable while allowing controlled extension.
+There is no install or run command at this stage. Do not publish this repository as a working gateway or connect production data to it until implementation, tests, security controls, and deployment evidence exist.
 
----
+## Engineering and security
 
-3. Evidence lifecycle
+Read [docs/EVIDENCE_CONTRACT_DRAFT.md](docs/EVIDENCE_CONTRACT_DRAFT.md), [docs/ENGINEERING_STANDARD.md](docs/ENGINEERING_STANDARD.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [SECURITY.md](SECURITY.md) before proposing implementation work.
 
-COLLECT
-   ↓
-NORMALIZE
-   ↓
-HASH
-   ↓
-STORE
-   ↓
-LINK
-   ↓
-VERIFY
-   ↓
-USE
-   ↓
-EXPORT
-
-Collect
-
-Acquire evidence from an authorized source.
-
-Examples:
-
-- uploaded files
-- API responses
-- system state
-- logs
-- configuration
-- command results
-- monitoring data
-- agent execution output
-
-Normalize
-
-Convert the observation into a deterministic representation where practical.
-
-Hash
-
-Calculate a cryptographic content hash.
-
-Example:
-
-SHA-256(content)
-
-The hash identifies the exact content that was evaluated.
-
-Store
-
-Persist the evidence and its metadata using an appropriate storage backend.
-
-Link
-
-Associate evidence with:
-
-- missions
-- operations
-- policies
-- decisions
-- reports
-
-Verify
-
-Check that the evidence has not changed and that its provenance satisfies the applicable rules.
-
-Export
-
-Make evidence available for:
-
-- audit
-- investigation
-- reporting
-- customer review
-- independent verification
-
----
-
-4. Evidence states
-
-OLA Evidence should distinguish between the existence of evidence and the conclusion derived from evidence.
-
-Recommended verification states:
-
-PASS
-FAIL
-UNKNOWN
-
-PASS
-
-Evidence satisfies the verification rule.
-
-FAIL
-
-Evidence exists but violates the verification rule.
-
-UNKNOWN
-
-The available evidence is insufficient to determine the result.
-
-"UNKNOWN" is not equivalent to "PASS".
-
-It must never silently become a successful result.
-
----
-
-5. Integrity
-
-Evidence integrity is based primarily on cryptographic hashing.
-
-Example:
-
-content
-   │
-   ▼
-SHA-256
-   │
-   ▼
-contentHash
-
-If the content changes:
-
-original content
-      ≠
-modified content
-
-then:
-
-hash(original)
-      ≠
-hash(modified)
-
-This allows the system to detect content modification.
-
-Hashing provides integrity evidence.
-
-It does not, by itself, prove:
-
-- who created the content
-- that the source was trustworthy
-- that the observation was truthful
-- that the capture process was authorized
-
-Those properties require additional provenance controls.
-
----
-
-6. Provenance
-
-Evidence should answer:
-
-WHERE did it come from?
-WHEN was it captured?
-WHO or WHAT collected it?
-WHAT exactly was collected?
-HOW was it processed?
-WHICH decision used it?
-
-A provenance chain may therefore look like:
-
-Source
-  ↓
-Collector
-  ↓
-Evidence
-  ↓
-Verification
-  ↓
-Decision
-  ↓
-Report
-
----
-
-7. Evidence vs. conclusion
-
-OLA must not confuse evidence with interpretation.
-
-Example:
-
-Evidence:
-certificate_expiry = 2026-08-20
-
-Possible interpretation:
-
-The certificate will expire soon.
-
-Decision:
-
-RISK = HIGH
-
-These are three different objects.
-
-The evidence should remain independently inspectable.
-
-The interpretation should be traceable to the evidence.
-
-The decision should identify the rule or reasoning that produced it.
-
----
-
-8. Verification model
-
-A verification result can be represented conceptually as:
-
-{
-  "ruleId": "CERT-EXPIRY-001",
-  "version": "1.0",
-  "status": "FAIL",
-  "reason": "Certificate expires within the configured threshold"
-}
-
-This makes the result reproducible and auditable.
-
-Rules should be versioned.
-
-A historical decision should retain the rule version used to produce it.
-
----
-
-9. Evidence graph
-
-Evidence should be linkable rather than existing as isolated files.
-
-Example:
-
-Mission
-  │
-  ├── Evidence A
-  │      └── Policy P1
-  │
-  ├── Evidence B
-  │      └── Policy P2
-  │
-  └── Evidence C
-         └── Policy P3
-                │
-                ▼
-             Decision
-                │
-                ▼
-              Report
-
-This allows an auditor or customer to move backwards:
-
-REPORT
-  ↓
-DECISION
-  ↓
-POLICY
-  ↓
-EVIDENCE
-  ↓
-SOURCE
-
----
-
-10. Immutability
-
-Where evidence is used for audit or forensic purposes, the preferred model is append-oriented storage.
-
-Instead of:
-
-Evidence A
-   ↓
-EDIT
-   ↓
-Evidence A'
-
-prefer:
-
-Evidence A
-   ↓
-New observation / correction
-   ↓
-Evidence B
-
-Historical evidence should not silently disappear.
-
-If correction is necessary, the system should preserve the relationship between the original and the corrected record.
-
----
-
-11. Cryptographic signatures
-
-Hashing and signing solve different problems.
-
-Hash
-
-Provides evidence that content has changed.
-
-content → hash
-
-Signature
-
-Can provide evidence that a particular signing key authorized the record.
-
-record + private key
-        ↓
-     signature
-
-OLA may support signed evidence records using an asymmetric signature scheme such as Ed25519.
-
-Signature verification should be separate from ordinary content hashing.
-
----
-
-12. Security requirements
-
-OLA Evidence should follow:
-
-- least privilege
-- explicit source authorization
-- tenant isolation
-- secure secret management
-- input validation
-- controlled serialization
-- integrity verification
-- audit logging
-- restricted evidence access
-- no plaintext secrets in evidence unless explicitly required and protected
-
-Evidence itself may contain sensitive information.
-
-Therefore:
-
-«Evidence integrity does not remove the need for evidence confidentiality.»
-
----
-
-13. API concept
-
-A minimal implementation may expose operations equivalent to:
-
-POST   /evidence
-GET    /evidence/{id}
-POST   /evidence/{id}/verify
-GET    /missions/{id}/evidence
-GET    /decisions/{id}/evidence
-GET    /reports/{id}/evidence
-
-The exact API should follow the current runtime architecture rather than being duplicated unnecessarily.
-
----
-
-14. Example workflow
-
-Input
-
-A customer uploads a configuration file.
-
-customer-config.yaml
-
-Collection
-
-OLA creates an evidence record.
-
-evidence_id = ev_001
-
-Hash
-
-SHA-256(customer-config.yaml)
-
-Analysis
-
-A policy evaluates the configuration.
-
-RULE-CONFIG-001
-
-Verification
-
-status = FAIL
-
-Decision
-
-risk = HIGH
-
-Report
-
-The final report contains a reference to:
-
-decision
-  ↓
-rule
-  ↓
-evidence
-  ↓
-contentHash
-
-The customer can therefore inspect the basis of the decision.
-
----
-
-15. Minimal implementation
-
-A minimal Evidence implementation should initially provide:
-
-Evidence
-├── schema
-├── creation
-├── hashing
-├── storage
-├── retrieval
-├── verification
-├── provenance
-└── tests
-
-Do not introduce distributed infrastructure until the product actually requires it.
-
-A reliable local implementation with deterministic tests is preferable to a complex evidence platform that cannot be verified end-to-end.
-
----
-
-16. Testing
-
-Evidence testing should cover at least:
-
-Schema
-
-- required fields
-- valid types
-- invalid records
-
-Hashing
-
-- deterministic hashes
-- modified content detection
-- empty content handling
-
-Provenance
-
-- source association
-- timestamp handling
-- mission association
-- decision association
-
-Verification
-
-- PASS
-- FAIL
-- UNKNOWN
-- rule versioning
-
-Integrity
-
-- original content verifies
-- modified content fails verification
-
-Security
-
-- unauthorized access denied
-- cross-tenant access denied
-- secrets not exposed
-
-End-to-end
-
-Create evidence
-      ↓
-Hash
-      ↓
-Store
-      ↓
-Retrieve
-      ↓
-Verify
-      ↓
-Use in decision
-      ↓
-Generate report
-
----
-
-17. Definition of Done
-
-OLA Evidence is not considered production-ready merely because an evidence table or class exists.
-
-Minimum Definition of Done:
-
-[ ] Evidence schema implemented
-[ ] Deterministic hashing implemented
-[ ] Evidence persistence implemented
-[ ] Retrieval implemented
-[ ] Verification implemented
-[ ] Provenance links implemented
-[ ] Integrity tests passing
-[ ] Security tests passing
-[ ] E2E workflow passing
-[ ] Documentation matches actual implementation
-
-For production claims, there must also be deployment evidence.
-
----
-
-18. Non-goals
-
-OLA Evidence is not intended to:
-
-- automatically declare every source trustworthy
-- turn model output into facts
-- replace enterprise SIEM/SOAR systems
-- provide legal certification by itself
-- guarantee truth merely because data is hashed
-- store unrestricted sensitive information
-- become an unnecessarily complex distributed storage system
-
----
-
-19. Design principle
-
-The Evidence layer should remain boring, deterministic and inspectable.
-
-The AI layer can be probabilistic.
-
-The evidence layer should be substantially less so.
-
-AI:
-"What do I think happened?"
-
-OLA Evidence:
-"What can we actually demonstrate?"
-
-OLA Verification:
-"Does the evidence satisfy the rule?"
-
-OLA Decision:
-"What should we do based on that verified state?"
-
----
-
-20. Relationship to OLA di-OS
-
-OLA Evidence is a foundational subsystem of OLA di-OS.
-
-OLA di-OS
-│
-├── Runtime
-├── Evidence
-│   ├── Collection
-│   ├── Provenance
-│   ├── Integrity
-│   └── Verification
-├── Policy
-├── Decision
-├── Reporting
-└── Product / Dashboard
-
-Evidence should remain reusable across the rest of the platform.
-
----
-
-21. Current-state rule
-
-This README describes the intended contract and behavior of OLA Evidence.
-
-It must not be interpreted as proof that every capability described here is currently implemented.
-
-Implementation status must be established from:
-
-source code
-+
-tests
-+
-CI results
-+
-runtime evidence
-+
-deployment evidence
-
-If implementation and documentation disagree, the actual verified implementation wins and the README must be corrected.
-
----
-
-22. Final principle
-
-OLA Evidence exists to establish a simple chain:
-
-SOURCE
-  ↓
-EVIDENCE
-  ↓
-HASH / PROVENANCE
-  ↓
-VERIFICATION
-  ↓
-DECISION
-  ↓
-REPORT
-
-The objective is not to make AI appear trustworthy.
-
-The objective is to make important AI-assisted operations more inspectable, reproducible and accountable.
-
-Evidence first. Claims second.# ola-evidence-gateway
+No LICENSE file is present. GitHub visibility does not grant rights to reuse or redistribute the material.

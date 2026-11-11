@@ -1,0 +1,36 @@
+name: Specification or implementation defect
+description: Report a reproducible defect in this draft or future implementation.
+title: "[DEFECT] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Area
+      options:
+        - Specification
+        - Schema or contract
+        - Executable implementation
+        - Security model
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reproduction or evidence
+      description: Remove secrets and sensitive evidence.
+    validations:
+      required: false

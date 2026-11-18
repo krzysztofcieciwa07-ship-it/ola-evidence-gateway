@@ -6,6 +6,10 @@ This repository currently contains a design document and editor configuration. I
 
 The active OLA runtime and its implemented evidence mechanisms are maintained in the [canonical OLA repository](https://github.com/krzysztofcieciwa07-ship-it/OLA). Do not infer that every capability in this specification is already implemented there or in this repository. Verify each capability against the source and tests.
 
+## Implementation status
+
+See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the verified boundary between this specification and an executable service.
+
 ## Purpose
 
 This repository is the design boundary for a future evidence-ingestion and provenance adapter. Its proposed responsibility is to normalize observations from authorized sources and make their origin, content digest, collection context, and verification status inspectable.
